@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t cdfairchild/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true cdfairchild/react-test npm test
+
+
+after_sucess:
+  - docker build -t cdfairchild/multi-client ./client 
+  - docker build -t cdfairchild/multi-nginx ./nginx 
+  - docker build -t cdfairchild/multi-server ./server 
+  - docker build -t cdfairchild/multi-worker ./worker 
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push cdfairchild/multi-client
+  - docker push cdfairchild/multi-nginx
+  - docker push cdfairchild/multi-server
+  - docker push cdfairchild/multi-worker
